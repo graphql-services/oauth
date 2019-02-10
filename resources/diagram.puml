@@ -1,0 +1,50 @@
+@startuml
+
+:user: as user
+[Client] as client
+[Resource Owner] as api
+  
+package "Auth" {
+    frame "Authorization" {
+      [Authorization] as authorization
+      [IAM] as iam
+      [Token validator] as validator
+      
+      
+      note bottom of iam
+        Service for providing 
+        identity (user), groups and policies
+      end note
+      
+      note top of validator
+        Custom implementation for scope 
+        validation, custom token payload etc.
+      end note
+    }
+    
+    frame "Authentication" {
+      [Authentication] as authentication
+      
+      database "DB" {
+        [Credentials] as credentials
+      }
+      
+      authentication <-> credentials
+      authentication --> [Google]
+      authentication --> [Facebook]
+      authentication --> [Github]
+      authentication --> [Other]
+    }
+}
+
+user --> client
+api <- client : Access token
+
+client <--> authorization : Authorize (access token)
+authorization --> authentication
+
+authorization --> validator
+validator -> iam
+
+
+@enduml
