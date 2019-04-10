@@ -33,6 +33,9 @@ func main() {
 	db := database.NewDBWithString(databaseURL)
 
 	userStore := UserStore{db}
+	if err := userStore.Automigrate(); err != nil {
+		panic(err)
+	}
 
 	manager := manage.NewDefaultManager()
 	manager.SetAuthorizeCodeTokenCfg(manage.DefaultAuthorizeCodeTokenCfg)
