@@ -18,7 +18,7 @@ type UserAccount struct {
 	ID        string `gorm:"primary_key"`
 	Type      string `gorm:"primary_key"`
 	UserID    string
-	User      User
+	User      User `gorm:"foreignkey:UserID"`
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }
