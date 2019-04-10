@@ -103,6 +103,10 @@ func main() {
 		srv.HandleTokenRequest(w, r)
 	})
 
+	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+		json.NewEncoder(w).Encode(map[string]string{"status": "OK"})
+	})
+
 	http.HandleFunc("/credentials", func(w http.ResponseWriter, r *http.Request) {
 		clientId := uuid.New().String()[:8]
 		clientSecret := uuid.New().String()[:8]
