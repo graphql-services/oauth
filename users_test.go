@@ -4,7 +4,7 @@ package main
 import (
 	"testing"
 
-	"github.com/graphql-services/auth/database"
+	"github.com/graphql-services/oauth/database"
 )
 
 func TestUserStore(t *testing.T) {

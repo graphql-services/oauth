@@ -1,8 +1,8 @@
 FROM golang as builder
-WORKDIR /go/src/github.com/graphql-services/auth
+WORKDIR /go/src/github.com/graphql-services/oauth
 COPY . .
 RUN go get ./... 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /tmp/app
+RUN GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /tmp/app
 
 FROM alpine:3.5
 

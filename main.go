@@ -19,7 +19,7 @@ import (
 	"gopkg.in/oauth2.v3/manage"
 	"gopkg.in/oauth2.v3/server"
 
-	"github.com/graphql-services/auth/database"
+	"github.com/graphql-services/oauth/database"
 )
 
 // https://auth0.com/docs/quickstart/backend/golang/01-authorization
