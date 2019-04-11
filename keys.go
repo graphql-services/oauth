@@ -2,16 +2,11 @@
 package main
 
 import (
-	"bytes"
-	"crypto/rand"
 	"crypto/rsa"
-	"crypto/x509"
-	"encoding/json"
-	"encoding/pem"
 	"fmt"
-	"net/http"
+	"os"
 
-	"gopkg.in/square/go-jose.v2"
+	"github.com/lestrrat/go-jwx/jwk"
 )
 
 type RSAKey struct {
@@ -19,58 +14,34 @@ type RSAKey struct {
 	PublicKey  *rsa.PublicKey
 }
 
-func generateNewRSAKey() (key *rsa.PrivateKey, err error) {
-	reader := rand.Reader
-	bitSize := 1024
-
-	key, err = rsa.GenerateKey(reader, bitSize)
-
-	pemKey, err := getPublicPEMKey(&key.PublicKey)
+func fetchRSAKey() (key *rsa.PrivateKey, err error) {
+	providerURL := os.Getenv("JWKS_PROVIDER_URL")
+	if providerURL == "" {
+		err = fmt.Errorf("Missing JWKS_PROVIDER_URL environment variable")
+		return
+	}
+	set, err := jwk.Fetch(providerURL)
 	if err != nil {
-		panic(err)
+		err = fmt.Errorf("failed to lookup key: %s", err)
+		return
 	}
-	fmt.Println("Generated new key with public key:\n", string(pemKey))
 
+	// If you KNOW you have exactly one key, you can just
+	// use set.Keys[0]
+	keys := set.Keys
+	if len(keys) == 0 {
+		err = fmt.Errorf("failed to lookup key: %s", err)
+		return
+	}
+
+	_key, err := keys[0].Materialize()
+	if err != nil {
+		return
+	}
+
+	key, ok := _key.(*rsa.PrivateKey)
+	if !ok {
+		err = fmt.Errorf("Cannot convert key to RSA Private Key")
+	}
 	return
-}
-
-func getPEMKey(key *rsa.PrivateKey) ([]byte, error) {
-	var privateKey = &pem.Block{
-		Type:  "PRIVATE KEY",
-		Bytes: x509.MarshalPKCS1PrivateKey(key),
-	}
-
-	buf := new(bytes.Buffer)
-	err := pem.Encode(buf, privateKey)
-	return buf.Bytes(), err
-}
-
-func getPublicPEMKey(key *rsa.PublicKey) ([]byte, error) {
-	ans1n, _ := x509.MarshalPKIXPublicKey(key)
-
-	var pemkey = &pem.Block{
-		Type:  "PUBLIC KEY",
-		Bytes: ans1n,
-	}
-
-	buf := new(bytes.Buffer)
-	err := pem.Encode(buf, pemkey)
-	return buf.Bytes(), err
-}
-
-func jwksHandler(key *rsa.PrivateKey, keyID string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		set := jose.JSONWebKeySet{
-			Keys: []jose.JSONWebKey{
-				jose.JSONWebKey{
-					Algorithm: "RS256",
-					Use:       "sig",
-					Key:       &key.PublicKey,
-					KeyID:     keyID,
-				},
-			},
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(set)
-	}
 }

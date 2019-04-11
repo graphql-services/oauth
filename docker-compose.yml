@@ -1,0 +1,8 @@
+version: '2'
+services:
+  jwks-provider:
+    image: graphql/jwks-provider
+    environment:
+      - PORT=80
+    ports:
+      - 8001:80

@@ -62,8 +62,7 @@ func main() {
 	srv.SetClientInfoHandler(server.ClientFormHandler)
 	manager.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
 
-	keyID := uuid.New().String()
-	rsaKey, err := generateNewRSAKey()
+	rsaKey, err := fetchRSAKey()
 	if err != nil {
 		panic(err)
 	}
@@ -99,9 +98,6 @@ func main() {
 	// 		http.Error(w, err.Error(), http.StatusBadRequest)
 	// 	}
 	// })
-
-	http.HandleFunc("/.well-known/jwks.json", jwksHandler(rsaKey, keyID))
-
 	http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
 		srv.HandleTokenRequest(w, r)
 	})
@@ -132,6 +128,9 @@ func main() {
 
 	// go testJWKS()
 	port := os.Getenv("PORT")
+	if port == "" {
+		port = "80"
+	}
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
 
