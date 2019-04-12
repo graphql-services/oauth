@@ -92,6 +92,10 @@ func main() {
 	})
 
 	srv.SetUserAuthorizationHandler(userAuthorizeHandler)
+	srv.SetClientInfoHandler(func(r *http.Request) (clientID, clientSecret string, err error) {
+		clientID, clientSecret, _ = r.BasicAuth()
+		return
+	})
 
 	mux := http.NewServeMux()
 
