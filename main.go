@@ -11,6 +11,7 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-session/session"
 	"github.com/google/uuid"
+	"github.com/rs/cors"
 	oauth2gorm "github.com/techknowlogick/go-oauth2-gorm"
 	"gopkg.in/oauth2.v3/models"
 	"gopkg.in/oauth2.v3/store"
@@ -92,21 +93,28 @@ func main() {
 
 	srv.SetUserAuthorizationHandler(userAuthorizeHandler)
 
-	// http.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
-	// 	err := srv.HandleAuthorizeRequest(w, r)
-	// 	if err != nil {
-	// 		http.Error(w, err.Error(), http.StatusBadRequest)
-	// 	}
-	// })
-	http.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
+	mux := http.NewServeMux()
+
+	// http://localhost:8080/authorize?client_id=default&redirect_uri=https%3A%2F%2Fwww.example.com&response_type=code&state=somestate&scope=read_write
+	mux.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
+		err := srv.HandleAuthorizeRequest(w, r)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
+	})
+	mux.HandleFunc("/token", func(w http.ResponseWriter, r *http.Request) {
 		srv.HandleTokenRequest(w, r)
 	})
 
-	http.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/login", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("this is login form"))
+	})
+
+	mux.HandleFunc("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		json.NewEncoder(w).Encode(map[string]string{"status": "OK"})
 	})
 
-	http.HandleFunc("/credentials", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/credentials", func(w http.ResponseWriter, r *http.Request) {
 		clientId := uuid.New().String()[:8]
 		clientSecret := uuid.New().String()[:8]
 		err := clientStore.Set(clientId, &models.Client{
@@ -122,16 +130,18 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]string{"CLIENT_ID": clientId, "CLIENT_SECRET": clientSecret})
 	})
 
-	http.HandleFunc("/protected", validateToken(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/protected", validateToken(func(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello, I'm protected"))
 	}, srv))
+
+	handler := cors.AllowAll().Handler(mux)
 
 	// go testJWKS()
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "80"
 	}
-	log.Fatal(http.ListenAndServe(":"+port, nil))
+	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
 func validateToken(f http.HandlerFunc, srv *server.Server) http.HandlerFunc {
@@ -152,7 +162,7 @@ func userAuthorizeHandler(w http.ResponseWriter, r *http.Request) (userID string
 		return
 	}
 
-	uid, ok := store.Get("LoggedInUserID")
+	uid, ok := store.Get("LoggedInUserID") // OR get value from url querystring
 	if !ok {
 		if r.Form == nil {
 			r.ParseForm()
