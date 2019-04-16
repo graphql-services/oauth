@@ -134,9 +134,9 @@ func main() {
 		json.NewEncoder(w).Encode(map[string]string{"CLIENT_ID": clientId, "CLIENT_SECRET": clientSecret})
 	})
 
-	mux.HandleFunc("/protected", validateToken(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, I'm protected"))
-	}, srv))
+	// mux.HandleFunc("/protected", validateToken(func(w http.ResponseWriter, r *http.Request) {
+	// 	w.Write([]byte("Hello, I'm protected"))
+	// }, srv))
 
 	handler := cors.AllowAll().Handler(mux)
 
@@ -148,17 +148,17 @@ func main() {
 	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 
-func validateToken(f http.HandlerFunc, srv *server.Server) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, err := srv.ValidationBearerToken(r)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusBadRequest)
-			return
-		}
+// func validateToken(f http.HandlerFunc, srv *server.Server) http.HandlerFunc {
+// 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+// 		_, err := srv.ValidationBearerToken(r)
+// 		if err != nil {
+// 			http.Error(w, err.Error(), http.StatusBadRequest)
+// 			return
+// 		}
 
-		f.ServeHTTP(w, r)
-	})
-}
+// 		f.ServeHTTP(w, r)
+// 	})
+// }
 
 func userAuthorizeHandler(w http.ResponseWriter, r *http.Request) (userID string, err error) {
 	store, err := session.Start(nil, w, r)

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/base64"
 	"strings"
 	"time"
@@ -15,6 +16,7 @@ import (
 
 // JWTAccessClaims jwt claims
 type JWTAccessClaims struct {
+	Scope string `json:"scope"`
 	jwt.StandardClaims
 }
 
@@ -42,12 +44,23 @@ type JWTAccessGenerate struct {
 
 // Token based on the UUID generated token
 func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool) (access, refresh string, err error) {
+	ctx := context.Background()
+	scope := data.Request.FormValue("scope")
+
+	if scope != "" {
+		err = validateScopeForUser(ctx, scope, data.UserID)
+		if err != nil {
+			return
+		}
+	}
+
 	claims := &JWTAccessClaims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  data.Client.GetID(),
 			Subject:   data.UserID,
 			ExpiresAt: data.TokenInfo.GetAccessCreateAt().Add(data.TokenInfo.GetAccessExpiresIn()).Unix(),
 		},
+		Scope: scope,
 	}
 
 	token := jwt.NewWithClaims(a.SignedMethod, claims)
