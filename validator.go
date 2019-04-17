@@ -23,9 +23,12 @@ query ($userID: ID, $scope: String) {
 `
 
 func validateScopeForUser(ctx context.Context, scope, userID string) (err error) {
-	URL := os.Getenv("USER_SCOPE_VALIDATOR_URL")
+	URL := os.Getenv("SCOPE_VALIDATOR_URL")
 	if URL != "" {
 		client := graphql.NewClient(URL)
+		client.Log = func(s string) {
+			fmt.Println(s)
+		}
 		req := graphql.NewRequest(ValidateUserScopesQuery)
 		req.Var("userID", userID)
 		req.Var("scope", scope)

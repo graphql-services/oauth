@@ -6,3 +6,7 @@ services:
       - PORT=80
     ports:
       - 8001:80
+  scope-validator:
+    image: graphql/oauth-user-scope-validator
+    ports:
+      - 8002:80

@@ -70,6 +70,9 @@ func main() {
 	manager.MapAccessGenerate(NewJWTAccessGenerate(rsaKey, jwt.SigningMethodRS256))
 
 	srv.SetInternalErrorHandler(func(err error) (re *errors.Response) {
+		re = &errors.Response{
+			Error: err,
+		}
 		log.Println("Internal Error:", err.Error())
 		return
 	})
