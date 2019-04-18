@@ -15,8 +15,8 @@ type ValidateUserScopeResponse struct {
 }
 
 const ValidateUserScopesQuery = `
-query ($userID: ID, $scope: String) {
-	result: validateUserScope(user: &userID, scope: $scope) {
+query ($userID: ID!, $scope: String!) {
+	result: validateUserScope(user: $userID, scope: $scope) {
 		valid
 	}
 }
@@ -35,6 +35,9 @@ func validateScopeForUser(ctx context.Context, scope, userID string) (err error)
 
 		var res ValidateUserScopeResponse
 		err = client.Run(ctx, req, &res)
+		if err != nil {
+			return
+		}
 
 		if !res.Result.Valid {
 			err = fmt.Errorf("invalid scopes")
