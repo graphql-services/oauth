@@ -20,6 +20,15 @@ query($email: String!, $password: String!) {
 	}
 }  
 `
+	createIDPUserMutation = `
+mutation($email: String!, $password: String!) {
+	result: createUser(input: {email:$email, password: $password}) {
+		id
+		email
+		email_verified
+	}
+}  
+`
 )
 
 type IDPUser struct {
@@ -35,6 +44,19 @@ func FetchIDPUser(ctx context.Context, email, password string) (user IDPUser, er
 	var res IDPUserResponse
 
 	req := graphql.NewRequest(fetchIDPUserQuery)
+	req.Var("email", email)
+	req.Var("password", password)
+	err = sendRequest(ctx, req, &res)
+
+	user = res.Result
+
+	return
+}
+
+func CreateIDPUser(ctx context.Context, email, password string) (user IDPUser, err error) {
+	var res IDPUserResponse
+
+	req := graphql.NewRequest(createIDPUserMutation)
 	req.Var("email", email)
 	req.Var("password", password)
 	err = sendRequest(ctx, req, &res)

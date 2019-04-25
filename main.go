@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/99designs/gqlgen/handler"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-session/session"
 	"github.com/google/uuid"
@@ -20,6 +21,7 @@ import (
 	"gopkg.in/oauth2.v3/manage"
 	"gopkg.in/oauth2.v3/server"
 
+	"github.com/graphql-services/memberships"
 	"github.com/graphql-services/oauth/database"
 )
 
@@ -42,7 +44,7 @@ func main() {
 	manager.SetAuthorizeCodeTokenCfg(manage.DefaultAuthorizeCodeTokenCfg)
 
 	// token memory store
-	dbStore := oauth2gorm.NewStoreWithDB(&oauth2gorm.Config{}, db, 1800)
+	dbStore := oauth2gorm.NewStoreWithDB(&oauth2gorm.Config{}, db.Client(), 1800)
 
 	// manager.MustTokenStorage(store.NewMemoryTokenStore())
 	manager.MapTokenStorage(dbStore)
@@ -102,6 +104,18 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	gqlHandler := handler.GraphQL(NewExecutableSchema(Config{Resolvers: &Resolver{DB: db}}))
+	playgroundHandler := handler.Playground("GraphQL playground", "/graphql")
+	mux.HandleFunc("/graphql", func(res http.ResponseWriter, req *http.Request) {
+		if req.Method == "GET" {
+			playgroundHandler(res, req)
+			return
+		}
+		ctx := context.WithValue(req.Context(), memberships.DBContextKey, db)
+		req = req.WithContext(ctx)
+		gqlHandler(res, req)
+	})
+
 	// http://localhost:8080/authorize?client_id=default&redirect_uri=https%3A%2F%2Fwww.example.com&response_type=code&state=somestate&scope=read_write
 	mux.HandleFunc("/authorize", func(w http.ResponseWriter, r *http.Request) {
 		err := srv.HandleAuthorizeRequest(w, r)
@@ -148,6 +162,7 @@ func main() {
 	if port == "" {
 		port = "80"
 	}
+	log.Printf("connect to http://localhost:%s/graphql for GraphQL playground", port)
 	log.Fatal(http.ListenAndServe(":"+port, handler))
 }
 

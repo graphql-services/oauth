@@ -5,30 +5,45 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/jinzhu/gorm"
+	"github.com/graphql-services/oauth/database"
 )
 
 type User struct {
-	ID        string `gorm:"primary_key"`
-	Accounts  []UserAccount
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID                  string      `gorm:"primary_key"`
+	Email               string      `json:"email"`
+	GivenName           *string     `json:"given_name"`
+	FamilyName          *string     `json:"family_name"`
+	MiddleName          *string     `json:"middle_name"`
+	Nickname            *string     `json:"nickname"`
+	PreferredUsername   *string     `json:"preferred_username"`
+	Profile             *string     `json:"profile"`
+	Picture             *string     `json:"picture"`
+	Website             *string     `json:"website"`
+	Gender              *UserGender `json:"gender"`
+	Birthdate           *time.Time  `json:"birthdate"`
+	Zoneinfo            *string     `json:"zoneinfo"`
+	Locale              *string     `json:"locale"`
+	PhoneNumber         *string     `json:"phone_number"`
+	PhoneNumberVerified *string     `json:"phone_number_verified"`
+	Address             *string     `json:"address"`
+	UpdatedAt           *time.Time  `json:"updatedAt"`
+	CreatedAt           time.Time   `json:"createdAt"`
+	Accounts            []UserAccount
 }
 type UserAccount struct {
-	ID        string `gorm:"primary_key"`
-	Type      string `gorm:"primary_key"`
-	UserID    string
-	User      User `gorm:"foreignkey:UserID"`
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	ID        string     `gorm:"primary_key"`
+	Type      string     `json:"type" gorm:"primary_key"`
+	UpdatedAt *time.Time `json:"updatedAt"`
+	CreatedAt time.Time  `json:"createdAt"`
+	User      User       `json:"user"`
 }
 
 type UserStore struct {
-	db *gorm.DB
+	db *database.DB
 }
 
 func (s *UserStore) Automigrate() error {
-	return s.db.AutoMigrate(&User{}, &UserAccount{}).Error
+	return s.db.AutoMigrate(&User{}, &UserAccount{})
 }
 
 func (s *UserStore) GetOrCreateUserWithAccount(accountID, accountType string) (user *User, err error) {
@@ -44,7 +59,7 @@ func (s *UserStore) GetOrCreateUserWithAccount(accountID, accountType string) (u
 
 func (s *UserStore) GetUserByAccount(accountID, accountType string) (user *User, err error) {
 	var account UserAccount
-	res := s.db.Model(&UserAccount{ID: accountID, Type: accountType}).Preload("User").First(&account)
+	res := s.db.Client().Model(&UserAccount{ID: accountID, Type: accountType}).Preload("User").First(&account)
 	if res.RecordNotFound() {
 		return
 	}
@@ -66,6 +81,6 @@ func (s *UserStore) CreateUserWithAccount(accountID, accountType string) (user *
 			},
 		},
 	}
-	err = s.db.Save(user).Error
+	err = s.db.Client().Save(user).Error
 	return
 }
