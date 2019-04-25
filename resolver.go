@@ -5,7 +5,6 @@ import (
 
 	"github.com/graphql-services/oauth/database"
 	uuid "github.com/satori/go.uuid"
-	"github.com/sethvargo/go-password/password"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
 
 type Resolver struct {
@@ -30,21 +29,9 @@ func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *Use
 	}
 
 	if res.RecordNotFound() {
-		pass, passErr := password.Generate(8, 2, 0, false, false)
-		err = passErr
-		if err != nil {
-			return
-		}
-
-		idpUser, idpErr := CreateIDPUser(ctx, email, pass)
-		err = idpErr
-		if err != nil {
-			return
-		}
-
 		u = &User{
 			ID:    uuid.Must(uuid.NewV4()).String(),
-			Email: idpUser.Email,
+			Email: email,
 		}
 		err = r.DB.Client().Save(u).Error
 	}
