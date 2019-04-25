@@ -22,6 +22,7 @@ type mutationResolver struct{ *Resolver }
 
 func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *User, err error) {
 	u = &User{}
+	// TODO: search user by account emails, not just primary user email
 	res := r.DB.Client().First(u, "email = ?", email)
 	err = res.Error
 	if err != nil && !res.RecordNotFound() {
