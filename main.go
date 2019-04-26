@@ -90,8 +90,10 @@ func main() {
 			return
 		}
 
-		user, err := userStore.GetOrCreateUserWithAccount(idpUser.ID, "idp")
-		userID = user.ID
+		user, err := userStore.GetOrCreateUserWithAccount(idpUser.ID, username, "idp")
+		if user != nil {
+			userID = user.ID
+		}
 
 		return
 	})

@@ -18,6 +18,7 @@ func TestUserStore(t *testing.T) {
 
 	accountType := "facebook"
 	accountID := "abcd1234"
+	email := "john.doe@example.com"
 
 	u, err := s.GetUserByAccount(accountID, accountType)
 	if err != nil {
@@ -27,7 +28,7 @@ func TestUserStore(t *testing.T) {
 		t.Errorf("[%v] user should be nil, but found", u.ID)
 	}
 
-	u, err = s.CreateUserWithAccount(accountID, accountType)
+	u, err = s.CreateUserWithAccount(accountID, email, accountType)
 	if err != nil {
 		t.Errorf("[%v] Failed to create user", err.Error())
 	}
@@ -35,7 +36,7 @@ func TestUserStore(t *testing.T) {
 		t.Errorf("[%v] user should not be nil", u.ID)
 	}
 
-	u2, err := s.GetOrCreateUserWithAccount(accountID, accountType)
+	u2, err := s.GetOrCreateUserWithAccount(accountID, email, accountType)
 	if err != nil {
 		t.Errorf("[%v] Failed to get or create user", err.Error())
 	}

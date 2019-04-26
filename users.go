@@ -46,13 +46,13 @@ func (s *UserStore) Automigrate() error {
 	return s.db.AutoMigrate(&User{}, &UserAccount{})
 }
 
-func (s *UserStore) GetOrCreateUserWithAccount(accountID, accountType string) (user *User, err error) {
+func (s *UserStore) GetOrCreateUserWithAccount(accountID, email, accountType string) (user *User, err error) {
 	user, err = s.GetUserByAccount(accountID, accountType)
 	if err != nil {
 		return
 	}
 	if user == nil {
-		user, err = s.CreateUserWithAccount(accountID, accountType)
+		user, err = s.CreateUserWithAccount(accountID, email, accountType)
 	}
 	return
 }
@@ -71,9 +71,10 @@ func (s *UserStore) GetUserByAccount(accountID, accountType string) (user *User,
 	return
 }
 
-func (s *UserStore) CreateUserWithAccount(accountID, accountType string) (user *User, err error) {
+func (s *UserStore) CreateUserWithAccount(accountID, email, accountType string) (user *User, err error) {
 	user = &User{
-		ID: uuid.New().String(),
+		ID:    uuid.New().String(),
+		Email: email,
 		Accounts: []UserAccount{
 			UserAccount{
 				Type: accountType,
