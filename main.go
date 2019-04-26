@@ -30,7 +30,7 @@ import (
 func main() {
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
-		panic(fmt.Errorf(""))
+		panic(fmt.Errorf("Missing DATABASE_URL environment variable"))
 	}
 
 	db := database.NewDBWithString(databaseURL)
