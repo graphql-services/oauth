@@ -44,6 +44,13 @@ type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) User(ctx context.Context, id string) (u *User, err error) {
 	u = &User{}
-	err = r.DB.Client().First(u, "id = ?", id).Error
+	res := r.DB.Client().First(u, "id = ?", id)
+
+	if res.RecordNotFound() {
+		u = nil
+		return
+	}
+	err = res.Error
+
 	return
 }
