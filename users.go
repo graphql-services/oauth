@@ -9,26 +9,26 @@ import (
 )
 
 type User struct {
-	ID                  string      `gorm:"primary_key"`
-	Email               string      `json:"email"`
-	GivenName           *string     `json:"given_name"`
-	FamilyName          *string     `json:"family_name"`
-	MiddleName          *string     `json:"middle_name"`
-	Nickname            *string     `json:"nickname"`
-	PreferredUsername   *string     `json:"preferred_username"`
-	Profile             *string     `json:"profile"`
-	Picture             *string     `json:"picture"`
-	Website             *string     `json:"website"`
-	Gender              *UserGender `json:"gender"`
-	Birthdate           *time.Time  `json:"birthdate"`
-	Zoneinfo            *string     `json:"zoneinfo"`
-	Locale              *string     `json:"locale"`
-	PhoneNumber         *string     `json:"phone_number"`
-	PhoneNumberVerified *string     `json:"phone_number_verified"`
-	Address             *string     `json:"address"`
-	UpdatedAt           *time.Time  `json:"updatedAt"`
-	CreatedAt           time.Time   `json:"createdAt"`
-	Accounts            []UserAccount
+	ID                  string        `gorm:"primary_key"`
+	Email               string        `json:"email"`
+	GivenName           *string       `json:"given_name"`
+	FamilyName          *string       `json:"family_name"`
+	MiddleName          *string       `json:"middle_name"`
+	Nickname            *string       `json:"nickname"`
+	PreferredUsername   *string       `json:"preferred_username"`
+	Profile             *string       `json:"profile"`
+	Picture             *string       `json:"picture"`
+	Website             *string       `json:"website"`
+	Gender              *UserGender   `json:"gender"`
+	Birthdate           *time.Time    `json:"birthdate"`
+	Zoneinfo            *string       `json:"zoneinfo"`
+	Locale              *string       `json:"locale"`
+	PhoneNumber         *string       `json:"phone_number"`
+	PhoneNumberVerified *string       `json:"phone_number_verified"`
+	Address             *string       `json:"address"`
+	UpdatedAt           *time.Time    `json:"updatedAt"`
+	CreatedAt           time.Time     `json:"createdAt"`
+	Accounts            []UserAccount `gorm:"foreignkey:UserID"`
 }
 type UserAccount struct {
 	ID        string     `gorm:"primary_key"`
