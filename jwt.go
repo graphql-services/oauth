@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"encoding/base64"
-	"fmt"
 	"strings"
 	"time"
 
@@ -49,7 +48,6 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 	scope := data.Request.FormValue("scope")
 
 	if scope != "" {
-		fmt.Println("???", scope, data.UserID)
 		err = validateScopeForUser(ctx, scope, data.UserID)
 		if err != nil {
 			return

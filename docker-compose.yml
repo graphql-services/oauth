@@ -1,5 +1,21 @@
 version: '2'
 services:
+  mysql:
+    image: mysql:5.5.42
+    restart: always
+    ports:
+      - 33060:3306
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: test
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    links:
+      - mysql
+    ports:
+      - 8888:80
+    environment:
+      - PMA_HOST=mysql:3306
   jwks-provider:
     image: graphql/jwks-provider
     environment:
@@ -10,3 +26,11 @@ services:
     image: graphql/oauth-user-scope-validator
     ports:
       - 8002:80
+  idp:
+    image: graphql/idp
+    ports:
+      - 8003:80
+    links:
+      - mysql
+    environment:
+      - DATABASE_URL=mysql://root:root@mysql:3306/test?parseTime=true

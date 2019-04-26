@@ -6,6 +6,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/graphql-services/oauth/database"
+	"github.com/jinzhu/gorm"
 )
 
 type User struct {
@@ -36,6 +37,7 @@ type UserAccount struct {
 	UpdatedAt *time.Time `json:"updatedAt"`
 	CreatedAt time.Time  `json:"createdAt"`
 	User      User       `json:"user"`
+	UserID    string     `json:"user_id"`
 }
 
 type UserStore struct {
@@ -52,7 +54,13 @@ func (s *UserStore) GetOrCreateUserWithAccount(accountID, email, accountType str
 		return
 	}
 	if user == nil {
-		user, err = s.CreateUserWithAccount(accountID, email, accountType)
+		tx := s.db.Client().Begin()
+		user, err = s.CreateUserWithAccount(tx, accountID, email, accountType)
+		if err != nil {
+			tx.Rollback()
+			return
+		}
+		err = tx.Commit().Error
 	}
 	return
 }
@@ -71,17 +79,28 @@ func (s *UserStore) GetUserByAccount(accountID, accountType string) (user *User,
 	return
 }
 
-func (s *UserStore) CreateUserWithAccount(accountID, email, accountType string) (user *User, err error) {
-	user = &User{
-		ID:    uuid.New().String(),
-		Email: email,
-		Accounts: []UserAccount{
-			UserAccount{
-				Type: accountType,
-				ID:   accountID,
-			},
-		},
+func (s *UserStore) CreateUserWithAccount(tx *gorm.DB, accountID, email, accountType string) (user *User, err error) {
+	user = &User{}
+
+	res := tx.First(user, "email = ?", email)
+	err = res.Error
+	if err != nil && !res.RecordNotFound() {
+		return
 	}
-	err = s.db.Client().Save(user).Error
+
+	if res.RecordNotFound() {
+		user = &User{
+			ID:    uuid.New().String(),
+			Email: email,
+		}
+	}
+
+	err = tx.Save(user).Error
+	if err != nil {
+		return
+	}
+
+	err = tx.Model(user).Association("Accounts").Append(UserAccount{Type: accountType, ID: accountID}).Error
+
 	return
 }
