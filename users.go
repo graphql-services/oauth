@@ -11,7 +11,7 @@ import (
 
 type User struct {
 	ID                  string        `gorm:"primary_key"`
-	Email               string        `json:"email"`
+	Email               string        `json:"email" gorm:"unique"`
 	GivenName           *string       `json:"given_name"`
 	FamilyName          *string       `json:"family_name"`
 	MiddleName          *string       `json:"middle_name"`

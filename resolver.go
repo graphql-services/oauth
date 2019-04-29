@@ -3,6 +3,8 @@ package main
 import (
 	"context"
 
+	"github.com/badoux/checkmail"
+
 	"github.com/graphql-services/oauth/database"
 	uuid "github.com/satori/go.uuid"
 ) // THIS CODE IS A STARTING POINT ONLY. IT WILL NOT BE UPDATED WITH SCHEMA CHANGES.
@@ -21,6 +23,11 @@ func (r *Resolver) Query() QueryResolver {
 type mutationResolver struct{ *Resolver }
 
 func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *User, err error) {
+	err = checkmail.ValidateFormat(email)
+	if err != nil {
+		return
+	}
+
 	u = &User{}
 	// TODO: search user by account emails, not just primary user email
 	res := r.DB.Client().First(u, "email = ?", email)
