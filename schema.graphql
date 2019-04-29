@@ -46,6 +46,27 @@ type Query {
   user(id: ID!): User
 }
 
+input UserInfo {
+  email: String
+  given_name: String
+  family_name: String
+  middle_name: String
+  nickname: String
+  preferred_username: String
+  profile: String
+  picture: String
+  website: String
+  gender: UserGender
+  birthdate: Time
+  zoneinfo: String
+  locale: String
+  phone_number: String
+  phone_number_verified: String
+  address: String
+}
+
 type Mutation {
   inviteUser(email: String!): User!
+  updateUser(id: ID!, info: UserInfo!): User!
+  deleteUser(id: ID!): User!
 }

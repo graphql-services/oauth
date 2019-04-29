@@ -47,6 +47,26 @@ func (r *mutationResolver) InviteUser(ctx context.Context, email string) (u *Use
 	return
 }
 
+func (r *mutationResolver) UpdateUser(ctx context.Context, id string, info UserInfo) (u *User, err error) {
+	u = &User{}
+	err = r.DB.Client().First(u, "id = ?", id).Error
+	if err != nil {
+		return
+	}
+	err = r.DB.Client().Model(u).Updates(info).Error
+	return
+}
+
+func (r *mutationResolver) DeleteUser(ctx context.Context, id string) (u *User, err error) {
+	u = &User{}
+	err = r.DB.Client().First(u, "id = ?", id).Error
+	if err != nil {
+		return
+	}
+	err = r.DB.Client().Delete(u).Error
+	return
+}
+
 type queryResolver struct{ *Resolver }
 
 func (r *queryResolver) User(ctx context.Context, id string) (u *User, err error) {
