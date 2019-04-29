@@ -69,7 +69,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	manager.MapAccessGenerate(NewJWTAccessGenerate(rsaKey, jwt.SigningMethodRS256))
+	manager.MapAccessGenerate(NewJWTAccessGenerate(rsaKey, jwt.SigningMethodRS256, &userStore))
 
 	srv.SetInternalErrorHandler(func(err error) (re *errors.Response) {
 		re = &errors.Response{

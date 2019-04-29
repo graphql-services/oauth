@@ -65,6 +65,12 @@ func (s *UserStore) GetOrCreateUserWithAccount(accountID, email, accountType str
 	return
 }
 
+func (s *UserStore) GetUser(userID string) (user *User, err error) {
+	user = &User{}
+	s.db.Client().First(&user, "id = ?", userID)
+	return
+}
+
 func (s *UserStore) GetUserByAccount(accountID, accountType string) (user *User, err error) {
 	var account UserAccount
 	res := s.db.Client().Model(&UserAccount{}).Preload("User").First(&account, &UserAccount{ID: accountID, Type: accountType})

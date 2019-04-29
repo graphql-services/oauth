@@ -14,9 +14,14 @@ import (
 	"gopkg.in/oauth2.v3/utils/uuid"
 )
 
+type JWTUser struct {
+	Email string
+}
+
 // JWTAccessClaims jwt claims
 type JWTAccessClaims struct {
-	Scope string `json:"scope"`
+	Scope string  `json:"scope"`
+	User  JWTUser `json:"user"`
 	jwt.StandardClaims
 }
 
@@ -29,10 +34,11 @@ func (a *JWTAccessClaims) Valid() error {
 }
 
 // NewJWTAccessGenerate create to generate the jwt access token instance
-func NewJWTAccessGenerate(key interface{}, method jwt.SigningMethod) *JWTAccessGenerate {
+func NewJWTAccessGenerate(key interface{}, method jwt.SigningMethod, userStore *UserStore) *JWTAccessGenerate {
 	return &JWTAccessGenerate{
 		SignedKey:    key,
 		SignedMethod: method,
+		UserStore:    userStore,
 	}
 }
 
@@ -40,12 +46,19 @@ func NewJWTAccessGenerate(key interface{}, method jwt.SigningMethod) *JWTAccessG
 type JWTAccessGenerate struct {
 	SignedKey    interface{}
 	SignedMethod jwt.SigningMethod
+	UserStore    *UserStore
 }
 
 // Token based on the UUID generated token
 func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool) (access, refresh string, err error) {
 	ctx := context.Background()
 	scope := data.Request.FormValue("scope")
+
+	user, fetchErr := a.UserStore.GetUser(data.UserID)
+	err = fetchErr
+	if err != nil {
+		return
+	}
 
 	if scope != "" {
 		err = validateScopeForUser(ctx, scope, data.UserID)
@@ -61,6 +74,9 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 			ExpiresAt: data.TokenInfo.GetAccessCreateAt().Add(data.TokenInfo.GetAccessExpiresIn()).Unix(),
 		},
 		Scope: scope,
+		User: JWTUser{
+			Email: user.Email,
+		},
 	}
 
 	token := jwt.NewWithClaims(a.SignedMethod, claims)
