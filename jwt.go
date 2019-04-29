@@ -15,7 +15,7 @@ import (
 )
 
 type JWTUser struct {
-	Email string
+	Email string `json:"email"`
 }
 
 // JWTAccessClaims jwt claims
