@@ -26,9 +26,6 @@ push: login
 	# docker push $(BUILD_TAG)
 	docker push $(TAG)
 
-generate:
-	go run github.com/99designs/gqlgen
-	go generate ./...
 
 build-local:
 	# go get ./...
@@ -40,7 +37,7 @@ deploy-local:
 	mv app /usr/local/bin/${IMAGE_NAME}
 
 run:
-	make build-local && SCOPE_VALIDATOR_URL=http://localhost:8002/graphql JWKS_PROVIDER_URL=http://localhost:8001/private/jwks.json IDP_URL=http://localhost:8003/graphql DATABASE_URL=mysql://root:root@localhost:33060/oauth?parseTime=true PORT=8080 ./app
+	make build-local && SCOPE_VALIDATOR_URL=http://localhost:8002/graphql JWKS_PROVIDER_URL=http://localhost:8001/private/jwks.json IDP_URL=http://localhost:8003/graphql ID_URL=http://localhost:8004/graphql DATABASE_URL=mysql://root:root@localhost:33060/test?parseTime=true PORT=8080 ./app
 
 # test:
 # 	DATABASE_URL=sqlite3://test.db $(IMAGE_NAME) server -p 8005
