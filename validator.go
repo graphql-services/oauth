@@ -5,42 +5,43 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/machinebox/graphql"
+	pb "github.com/graphql-services/oauth/grpc"
+	"google.golang.org/grpc"
 )
 
-type ValidateUserScopeResponse struct {
-	Result struct {
-		Valid bool
-	}
-}
+var client *pb.ScopeValidatorClient
 
-const ValidateUserScopesQuery = `
-query ($userID: ID!, $scope: String!) {
-	result: validateUserScope(user: $userID, scope: $scope) {
-		valid
+func getClient() (*pb.ScopeValidatorClient, error) {
+	if client == nil {
+
+		URL := os.Getenv("SCOPE_VALIDATOR_URL")
+		if URL != "" {
+			conn, err := grpc.Dial(URL, grpc.WithInsecure())
+			if err != nil {
+				return nil, err
+			}
+
+			c := pb.NewScopeValidatorClient(conn)
+			client = &c
+		}
 	}
+	return client, nil
 }
-`
 
 func validateScopeForUser(ctx context.Context, scope, userID string) (err error) {
-	URL := os.Getenv("SCOPE_VALIDATOR_URL")
-	if URL != "" {
-		client := graphql.NewClient(URL)
-		client.Log = func(s string) {
-			fmt.Println(s)
-		}
-		req := graphql.NewRequest(ValidateUserScopesQuery)
-		req.Var("userID", userID)
-		req.Var("scope", scope)
-
-		var res ValidateUserScopeResponse
-		err = client.Run(ctx, req, &res)
+	c, err := getClient()
+	if err != nil {
+		return
+	}
+	if c != nil {
+		req := &pb.ValidateRequest{UserID: userID, Scopes: scope}
+		res, err := (*c).Validate(ctx, req)
 		if err != nil {
-			return
+			return err
 		}
 
-		if !res.Result.Valid {
-			err = fmt.Errorf("invalid scopes")
+		if !res.Valid {
+			return fmt.Errorf("invalid scopes")
 		}
 	}
 	return

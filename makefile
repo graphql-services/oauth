@@ -39,6 +39,9 @@ deploy-local:
 run:
 	make build-local && SCOPE_VALIDATOR_URL=http://localhost:8002/graphql JWKS_PROVIDER_URL=http://localhost:8001/private/jwks.json IDP_URL=http://localhost:8003/graphql ID_URL=http://localhost:8004/graphql DATABASE_URL=mysql://root:root@localhost:33060/test?parseTime=true PORT=8080 ./app
 
+protoc:
+	protoc --go_out=plugins=grpc:. grpc/scope-validator.proto 
+	
 # test:
 # 	DATABASE_URL=sqlite3://test.db $(IMAGE_NAME) server -p 8005
 	# DATABASE_URL="mysql://root:root@tcp(localhost:3306)/test?parseTime=true" go run *.go server -p 8000

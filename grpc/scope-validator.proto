@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package pb;
+
+service ScopeValidator {
+    rpc Validate(ValidateRequest) returns (ValidateResponse){}
+}
+
+message ValidateRequest {
+    string userID = 1;
+    string scopes = 2;
+}
+
+message ValidateResponse {
+    bool valid = 1;
+    string scopes = 2;
+}
