@@ -61,7 +61,7 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 	}
 
 	if scope != "" {
-		err = validateScopeForUser(ctx, scope, data.UserID)
+		scope, err = validateScopeForUser(ctx, scope, data.UserID)
 		if err != nil {
 			return
 		}

@@ -28,21 +28,22 @@ func getClient() (*pb.ScopeValidatorClient, error) {
 	return client, nil
 }
 
-func validateScopeForUser(ctx context.Context, scope, userID string) (err error) {
+func validateScopeForUser(ctx context.Context, scope, userID string) (string, error) {
 	c, err := getClient()
 	if err != nil {
-		return
+		return "", err
 	}
 	if c != nil {
 		req := &pb.ValidateRequest{UserID: userID, Scopes: scope}
 		res, err := (*c).Validate(ctx, req)
 		if err != nil {
-			return err
+			return "", err
 		}
 
 		if !res.Valid {
-			return fmt.Errorf("invalid scopes")
+			return "", fmt.Errorf("invalid scopes")
 		}
+		scope = res.Scopes
 	}
-	return
+	return scope, nil
 }
