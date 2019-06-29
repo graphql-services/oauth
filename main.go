@@ -11,6 +11,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-session/session"
 	"github.com/google/uuid"
+	opentracing "github.com/opentracing/opentracing-go"
+	otlog "github.com/opentracing/opentracing-go/log"
 	"github.com/rs/cors"
 	oauth2gorm "github.com/techknowlogick/go-oauth2-gorm"
 	"gopkg.in/oauth2.v3/models"
@@ -26,6 +28,11 @@ import (
 // https://auth0.com/docs/quickstart/backend/golang/01-authorization
 
 func main() {
+
+	t := Tracer{}
+	t.Initialize()
+	defer t.Close()
+
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		panic(fmt.Errorf("Missing DATABASE_URL environment variable"))
@@ -85,11 +92,17 @@ func main() {
 
 	srv.SetPasswordAuthorizationHandler(func(username, password string) (userID string, err error) {
 		ctx := context.Background()
+
+		span, ctx := opentracing.StartSpanFromContext(ctx, "oauth-password_authorization")
+		defer span.Finish()
+		span.LogFields(
+			otlog.String("username", username))
+
 		idpUser, err := idp.FetchIDPUser(ctx, username, password)
 		if err != nil {
 			return
 		}
-		user, err := userStore.GetOrCreateUserWithAccount(idpUser.ID, username, "idp")
+		user, err := userStore.GetOrCreateUserWithAccount(ctx, idpUser.ID, username, "idp")
 		if user != nil {
 			userID = user.ID
 		}

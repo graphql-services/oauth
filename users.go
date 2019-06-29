@@ -25,14 +25,14 @@ func (s *UserStore) AutoMigrate() error {
 	return s.DB.AutoMigrate(&UserAccount{})
 }
 
-func (s *UserStore) GetOrCreateUserWithAccount(accountID, email, accountType string) (user *User, err error) {
-	user, err = s.GetUserByAccount(accountID, accountType)
+func (s *UserStore) GetOrCreateUserWithAccount(ctx context.Context, accountID, email, accountType string) (user *User, err error) {
+	user, err = s.GetUserByAccount(ctx, accountID, accountType)
 	if err != nil {
 		return
 	}
 
 	if user == nil {
-		user, err = s.CreateUserWithAccount(accountID, email, accountType)
+		user, err = s.CreateUserWithAccount(ctx, accountID, email, accountType)
 		if err != nil {
 			return
 		}
@@ -40,12 +40,12 @@ func (s *UserStore) GetOrCreateUserWithAccount(accountID, email, accountType str
 	return
 }
 
-func (s *UserStore) GetUser(userID string) (user *User, err error) {
-	user, err = s.ID.GetUser(context.Background(), userID)
+func (s *UserStore) GetUser(ctx context.Context, userID string) (user *User, err error) {
+	user, err = s.ID.GetUser(ctx, userID)
 	return
 }
 
-func (s *UserStore) GetUserByAccount(accountID, accountType string) (user *User, err error) {
+func (s *UserStore) GetUserByAccount(ctx context.Context, accountID, accountType string) (user *User, err error) {
 	var account UserAccount
 	res := s.DB.Client().Model(&UserAccount{}).First(&account, &UserAccount{ID: accountID, Type: accountType})
 	if res.RecordNotFound() {
@@ -55,12 +55,12 @@ func (s *UserStore) GetUserByAccount(accountID, accountType string) (user *User,
 	if err != nil {
 		return
 	}
-	user, err = s.ID.GetUser(context.Background(), account.UserID)
+	user, err = s.ID.GetUser(ctx, account.UserID)
 	return
 }
 
-func (s *UserStore) CreateUserWithAccount(accountID, email, accountType string) (user *User, err error) {
-	user, err = s.ID.InviteUser(context.Background(), email)
+func (s *UserStore) CreateUserWithAccount(ctx context.Context, accountID, email, accountType string) (user *User, err error) {
+	user, err = s.ID.InviteUser(ctx, email)
 	if err != nil {
 		return
 	}

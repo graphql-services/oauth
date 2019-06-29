@@ -56,7 +56,7 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 	scope := data.Request.FormValue("scope")
 
 	fmt.Println("feching user", data.UserID)
-	user, fetchErr := a.UserStore.GetUser(data.UserID)
+	user, fetchErr := a.UserStore.GetUser(ctx, data.UserID)
 	err = fetchErr
 	if err != nil {
 		return
