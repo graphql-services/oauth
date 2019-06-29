@@ -19,8 +19,10 @@ type Tracer struct {
 }
 
 func (t *Tracer) Initialize() error {
-	filename := "credentials.json"
-
+	filename := os.Getenv("GOOGLE_CREDENTIALS_FILE")
+	if filename == "" {
+		filename = "credentials.json"
+	}
 	if _, err := os.Stat(filename); os.IsNotExist(err) {
 		return nil
 	}
