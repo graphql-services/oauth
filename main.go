@@ -43,9 +43,9 @@ func main() {
 		panic(err)
 	}
 
-	// t := Tracer{}
-	// t.Initialize()
-	// defer t.Close()
+	t := Tracer{}
+	t.Initialize()
+	defer t.Close()
 
 	manager := manage.NewDefaultManager()
 	manager.SetAuthorizeCodeTokenCfg(manage.DefaultAuthorizeCodeTokenCfg)
