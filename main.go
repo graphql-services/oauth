@@ -29,10 +29,6 @@ import (
 
 func main() {
 
-	t := Tracer{}
-	t.Initialize()
-	defer t.Close()
-
 	databaseURL := os.Getenv("DATABASE_URL")
 	if databaseURL == "" {
 		panic(fmt.Errorf("Missing DATABASE_URL environment variable"))
@@ -46,6 +42,10 @@ func main() {
 	if err := userStore.AutoMigrate(); err != nil {
 		panic(err)
 	}
+
+	// t := Tracer{}
+	// t.Initialize()
+	// defer t.Close()
 
 	manager := manage.NewDefaultManager()
 	manager.SetAuthorizeCodeTokenCfg(manage.DefaultAuthorizeCodeTokenCfg)
