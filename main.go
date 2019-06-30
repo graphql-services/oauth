@@ -93,7 +93,7 @@ func main() {
 	srv.SetPasswordAuthorizationHandler(func(username, password string) (userID string, err error) {
 		ctx := context.Background()
 
-		span, ctx := opentracing.StartSpanFromContext(ctx, "oauth-password_authorization")
+		span, ctx := opentracing.StartSpanFromContext(ctx, "oauth - /authorization/password")
 		defer span.Finish()
 		span.LogFields(
 			otlog.String("username", username))

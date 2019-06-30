@@ -10,6 +10,7 @@ import (
 	errs "errors"
 
 	"github.com/dgrijalva/jwt-go"
+	opentracing "github.com/opentracing/opentracing-go"
 	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/errors"
 	"gopkg.in/oauth2.v3/utils/uuid"
@@ -53,6 +54,14 @@ type JWTAccessGenerate struct {
 // Token based on the UUID generated token
 func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool) (access, refresh string, err error) {
 	ctx := context.Background()
+
+	spanName := "/token/create"
+	if isGenRefresh {
+		spanName = "/token/refresh"
+	}
+	span, ctx := opentracing.StartSpanFromContext(ctx, "oauth - "+spanName)
+	defer span.Finish()
+
 	scope := data.Request.FormValue("scope")
 
 	fmt.Println("feching user", data.UserID)
