@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/graphql-services/oauth/database"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 type UserAccount struct {
@@ -26,6 +27,9 @@ func (s *UserStore) AutoMigrate() error {
 }
 
 func (s *UserStore) GetOrCreateUserWithAccount(ctx context.Context, accountID, email, accountType string) (user *User, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetOrCreateUserWithAccount")
+	defer span.Finish()
+
 	user, err = s.GetUserByAccount(ctx, accountID, accountType)
 	if err != nil {
 		return
@@ -41,11 +45,17 @@ func (s *UserStore) GetOrCreateUserWithAccount(ctx context.Context, accountID, e
 }
 
 func (s *UserStore) GetUser(ctx context.Context, userID string) (user *User, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetUser")
+	defer span.Finish()
+
 	user, err = s.ID.GetUser(ctx, userID)
 	return
 }
 
 func (s *UserStore) GetUserByAccount(ctx context.Context, accountID, accountType string) (user *User, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "GetUserByAccount")
+	defer span.Finish()
+
 	var account UserAccount
 	res := s.DB.Client().Model(&UserAccount{}).First(&account, &UserAccount{ID: accountID, Type: accountType})
 	if res.RecordNotFound() {
@@ -60,6 +70,9 @@ func (s *UserStore) GetUserByAccount(ctx context.Context, accountID, accountType
 }
 
 func (s *UserStore) CreateUserWithAccount(ctx context.Context, accountID, email, accountType string) (user *User, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateUserWithAccount")
+	defer span.Finish()
+
 	user, err = s.ID.InviteUser(ctx, email)
 	if err != nil {
 		return
