@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/machinebox/graphql"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 const (
@@ -54,6 +55,9 @@ type IDPUserResponse struct {
 }
 
 func (c *IDPClient) FetchIDPUser(ctx context.Context, email, password string) (user IDPUser, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FetchIDPUser")
+	defer span.Finish()
+
 	var res IDPUserResponse
 
 	req := graphql.NewRequest(fetchIDPUserQuery)
@@ -67,6 +71,9 @@ func (c *IDPClient) FetchIDPUser(ctx context.Context, email, password string) (u
 }
 
 func (c *IDPClient) CreateIDPUser(ctx context.Context, email, password string) (user IDPUser, err error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CreateIDPUser")
+	defer span.Finish()
+
 	var res IDPUserResponse
 
 	req := graphql.NewRequest(createIDPUserMutation)
