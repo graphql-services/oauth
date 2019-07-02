@@ -6,6 +6,7 @@ import (
 	"os"
 
 	pb "github.com/graphql-services/oauth/grpc"
+	opentracing "github.com/opentracing/opentracing-go"
 	"google.golang.org/grpc"
 )
 
@@ -29,6 +30,9 @@ func getClient() (*pb.ScopeValidatorClient, error) {
 }
 
 func validateScopeForUser(ctx context.Context, scope, userID string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "validateScopeForUser")
+	defer span.Finish()
+
 	c, err := getClient()
 	if err != nil {
 		return "", err
