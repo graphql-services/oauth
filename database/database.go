@@ -49,6 +49,11 @@ func getConnectionString(u *url.URL) string {
 	if u.Scheme != "sqlite3" {
 		u.Host = "tcp(" + u.Host + ")"
 	}
+	if u.Scheme == "mysql" {
+		q := u.Query()
+		q.Set("parseTime", "true")
+		u.RawQuery = q.Encode()
+	}
 	return strings.Replace(u.String(), u.Scheme+"://", "", 1)
 }
 
