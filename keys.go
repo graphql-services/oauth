@@ -5,13 +5,35 @@ import (
 	"crypto/rsa"
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/lestrrat/go-jwx/jwk"
+	"github.com/patrickmn/go-cache"
 )
 
 type RSAKey struct {
 	PrivateKey *rsa.PrivateKey
 	PublicKey  *rsa.PublicKey
+}
+
+var c *cache.Cache
+
+// get RSA Key with caching
+func getRSAKey() (key *rsa.PrivateKey, err error) {
+	if c == nil {
+		c = cache.New(5*time.Minute, 10*time.Minute)
+	}
+	v, ok := c.Get("rsaKey")
+	if ok {
+		key = v.(*rsa.PrivateKey)
+		return
+	}
+
+	key, err = fetchRSAKey()
+	if err == nil {
+		c.Set("rsaKey", key, cache.DefaultExpiration)
+	}
+	return
 }
 
 func fetchRSAKey() (key *rsa.PrivateKey, err error) {

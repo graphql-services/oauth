@@ -11,10 +11,12 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-session/session"
 	"github.com/google/uuid"
+
 	opentracing "github.com/opentracing/opentracing-go"
 	otlog "github.com/opentracing/opentracing-go/log"
 	"github.com/rs/cors"
 	oauth2gorm "github.com/techknowlogick/go-oauth2-gorm"
+	"gopkg.in/oauth2.v3"
 	"gopkg.in/oauth2.v3/models"
 	"gopkg.in/oauth2.v3/store"
 
@@ -72,11 +74,7 @@ func main() {
 	srv.SetClientInfoHandler(server.ClientFormHandler)
 	manager.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
 
-	rsaKey, err := fetchRSAKey()
-	if err != nil {
-		panic(err)
-	}
-	manager.MapAccessGenerate(NewJWTAccessGenerate(rsaKey, jwt.SigningMethodRS256, &userStore))
+	manager.MapAccessGenerate(NewJWTAccessGenerate(jwt.SigningMethodRS256, &userStore))
 
 	srv.SetInternalErrorHandler(func(err error) (re *errors.Response) {
 		re = &errors.Response{
@@ -115,6 +113,18 @@ func main() {
 		clientID, clientSecret, _ = r.BasicAuth()
 		return
 	})
+	srv.ExtensionFieldsHandler = func(ti oauth2.TokenInfo) (fieldsValue map[string]interface{}) {
+		scope := ti.GetScope()
+		if containsScope(scope, "openid") {
+			fieldsValue = map[string]interface{}{}
+			idToken, err := generateIDToken(context.Background(), ti, &userStore)
+			if err != nil {
+				panic(err)
+			}
+			fieldsValue["id_token"] = idToken
+		}
+		return
+	}
 
 	mux := http.NewServeMux()
 

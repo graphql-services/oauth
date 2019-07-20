@@ -36,9 +36,8 @@ func (a *JWTAccessClaims) Valid() error {
 }
 
 // NewJWTAccessGenerate create to generate the jwt access token instance
-func NewJWTAccessGenerate(key interface{}, method jwt.SigningMethod, userStore *UserStore) *JWTAccessGenerate {
+func NewJWTAccessGenerate(method jwt.SigningMethod, userStore *UserStore) *JWTAccessGenerate {
 	return &JWTAccessGenerate{
-		SignedKey:    key,
 		SignedMethod: method,
 		UserStore:    userStore,
 	}
@@ -46,7 +45,6 @@ func NewJWTAccessGenerate(key interface{}, method jwt.SigningMethod, userStore *
 
 // JWTAccessGenerate generate the jwt access token
 type JWTAccessGenerate struct {
-	SignedKey    interface{}
 	SignedMethod jwt.SigningMethod
 	UserStore    *UserStore
 }
@@ -92,16 +90,21 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 	}
 
 	token := jwt.NewWithClaims(a.SignedMethod, claims)
+	signedKey, err := getRSAKey()
+	if err != nil {
+		return
+	}
+
 	var key interface{}
 	if a.isEs() {
-		key, err = jwt.ParseECPrivateKeyFromPEM(a.SignedKey.([]byte))
+		key, err = jwt.ParseECPrivateKeyFromPEM(signedKey.D.Bytes())
 		if err != nil {
 			return "", "", err
 		}
 	} else if a.isRsOrPS() {
-		key = a.SignedKey
+		key = signedKey
 	} else if a.isHs() {
-		key = a.SignedKey
+		key = signedKey
 	} else {
 		return "", "", errs.New("unsupported sign method")
 	}
@@ -130,4 +133,14 @@ func (a *JWTAccessGenerate) isRsOrPS() bool {
 
 func (a *JWTAccessGenerate) isHs() bool {
 	return strings.HasPrefix(a.SignedMethod.Alg(), "HS")
+}
+
+func containsScope(scopes, s string) bool {
+	_scopes := strings.Split(scopes, " ")
+	for _, _s := range _scopes {
+		if _s == s {
+			return true
+		}
+	}
+	return false
 }
