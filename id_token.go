@@ -54,7 +54,7 @@ func generateIDToken(ctx context.Context, ti oauth2.TokenInfo, us *UserStore) (t
 	if containsScope(scope, "email") {
 		claims.IDTokenEmailClaims = IDTokenEmailClaims{
 			Email:         user.Email,
-			EmailVerified: true,
+			EmailVerified: user.EmailVerified,
 		}
 	}
 	if containsScope(scope, "profile") {
