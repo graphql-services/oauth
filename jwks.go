@@ -21,7 +21,7 @@ var c *cache.Cache
 // get RSA Key with caching
 func getRSAKey() (key *rsa.PrivateKey, kid string, err error) {
 	if c == nil {
-		c = cache.New(5*time.Minute, 10*time.Minute)
+		c = cache.New(1*time.Minute, 1*time.Minute)
 	}
 	v, ok := c.Get("rsaKey")
 	vID, okID := c.Get("rsaKeyKid")
