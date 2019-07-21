@@ -94,10 +94,12 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 	}
 
 	token := jwt.NewWithClaims(a.SignedMethod, claims)
-	signedKey, err := getRSAKey()
+	signedKey, kid, err := getRSAKey()
 	if err != nil {
 		return
 	}
+
+	token.Header["kid"] = kid
 
 	var key interface{}
 	if a.isEs() {

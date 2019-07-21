@@ -19,24 +19,27 @@ type RSAKey struct {
 var c *cache.Cache
 
 // get RSA Key with caching
-func getRSAKey() (key *rsa.PrivateKey, err error) {
+func getRSAKey() (key *rsa.PrivateKey, kid string, err error) {
 	if c == nil {
 		c = cache.New(5*time.Minute, 10*time.Minute)
 	}
 	v, ok := c.Get("rsaKey")
-	if ok {
+	vID, okID := c.Get("rsaKeyKid")
+	if ok && okID {
 		key = v.(*rsa.PrivateKey)
+		kid = vID.(string)
 		return
 	}
 
-	key, err = fetchRSAKey()
+	key, kid, err = fetchRSAKey()
 	if err == nil {
 		c.Set("rsaKey", key, cache.DefaultExpiration)
+		c.Set("rsaKeyKid", kid, cache.DefaultExpiration)
 	}
 	return
 }
 
-func fetchRSAKey() (key *rsa.PrivateKey, err error) {
+func fetchRSAKey() (key *rsa.PrivateKey, kid string, err error) {
 	providerURL := os.Getenv("JWKS_PROVIDER_URL")
 	if providerURL == "" {
 		err = fmt.Errorf("Missing JWKS_PROVIDER_URL environment variable")
@@ -55,7 +58,7 @@ func fetchRSAKey() (key *rsa.PrivateKey, err error) {
 		err = fmt.Errorf("failed to lookup key: %s", err)
 		return
 	}
-
+	kid = keys[0].KeyID()
 	_key, err := keys[0].Materialize()
 	if err != nil {
 		return

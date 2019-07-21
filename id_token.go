@@ -81,10 +81,11 @@ func generateIDToken(ctx context.Context, ti oauth2.TokenInfo, us *UserStore) (t
 	}
 
 	t := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
-	signedKey, err := getRSAKey()
+	signedKey, kid, err := getRSAKey()
 	if err != nil {
 		return
 	}
+	t.Header["kid"] = kid
 	token, err = t.SignedString(signedKey)
 
 	return
