@@ -69,13 +69,17 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 		return
 	}
 
-	if scope != "" {
-		fmt.Println("validating scope", scope, data.UserID)
-		scope, err = validateScopeForUser(ctx, scope, data.UserID)
+	standardScopes, nonstandardScopes := separateScopes(scope)
+	if len(nonstandardScopes) > 0 {
+		fmt.Println("validating nonstandard scopes", nonstandardScopes, data.UserID)
+		validatedScopes, err := validateScopeForUser(ctx, strings.Join(nonstandardScopes, " "), data.UserID)
 		if err != nil {
-			return
+			return access, refresh, err
 		}
+		nonstandardScopes = strings.Split(validatedScopes, " ")
 	}
+
+	scope = strings.Join(append(standardScopes, nonstandardScopes...), " ")
 
 	claims := &JWTAccessClaims{
 		StandardClaims: jwt.StandardClaims{
@@ -143,4 +147,17 @@ func containsScope(scopes, s string) bool {
 		}
 	}
 	return false
+}
+
+func separateScopes(scopes string) (standard, nonstandard []string) {
+	standard = []string{}
+	nonstandard = []string{}
+	for _, scope := range strings.Split(scopes, " ") {
+		if scope == "openid" || scope == "profile" || scope == "email" {
+			standard = append(standard, scope)
+		} else {
+			nonstandard = append(nonstandard, scope)
+		}
+	}
+	return
 }

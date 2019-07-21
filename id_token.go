@@ -11,7 +11,7 @@ import (
 )
 
 type IDTokenProfileClaims struct {
-	Name              string     `json:"name,omitempty"`
+	Name              *string    `json:"name,omitempty"`
 	FamilyName        *string    `json:"family_name,omitempty"`
 	GivenName         *string    `json:"given_name,omitempty"`
 	MiddleName        *string    `json:"middle_name,omitempty"`
@@ -58,8 +58,12 @@ func generateIDToken(ctx context.Context, ti oauth2.TokenInfo, us *UserStore) (t
 		}
 	}
 	if containsScope(scope, "profile") {
+		name := ""
+		if user.FamilyName != nil && user.GivenName != nil {
+			name = fmt.Sprintf("%s %s", user.GivenName, user.FamilyName)
+		}
 		claims.IDTokenProfileClaims = IDTokenProfileClaims{
-			Name:              fmt.Sprintf("%s %s", user.GivenName, user.FamilyName),
+			Name:              &name,
 			FamilyName:        user.FamilyName,
 			GivenName:         user.GivenName,
 			MiddleName:        user.MiddleName,
