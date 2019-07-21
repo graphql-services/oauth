@@ -16,6 +16,20 @@ query($id: ID!) {
 	result: user(id: $id) {
 		id
 		email
+		email_verified
+		family_name
+		given_name
+		middle_name
+		nickname
+		preferred_username
+		profile
+		picture
+		website
+		gender
+		birthdate
+		zoneinfo
+		locale
+		updatedAt
 	}
 }  
 `
@@ -30,8 +44,9 @@ mutation($email: String!) {
 )
 
 type User struct {
-	ID                  string     `json:"id" gorm:"primary_key"`
-	Email               string     `json:"email" gorm:"unique"`
+	ID                  string     `json:"id"`
+	Email               string     `json:"email"`
+	EmailVerified       bool       `json:"email_verified"`
 	GivenName           *string    `json:"given_name"`
 	FamilyName          *string    `json:"family_name"`
 	MiddleName          *string    `json:"middle_name"`

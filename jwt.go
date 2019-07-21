@@ -36,9 +36,8 @@ func (a *JWTAccessClaims) Valid() error {
 }
 
 // NewJWTAccessGenerate create to generate the jwt access token instance
-func NewJWTAccessGenerate(key interface{}, method jwt.SigningMethod, userStore *UserStore) *JWTAccessGenerate {
+func NewJWTAccessGenerate(method jwt.SigningMethod, userStore *UserStore) *JWTAccessGenerate {
 	return &JWTAccessGenerate{
-		SignedKey:    key,
 		SignedMethod: method,
 		UserStore:    userStore,
 	}
@@ -46,7 +45,6 @@ func NewJWTAccessGenerate(key interface{}, method jwt.SigningMethod, userStore *
 
 // JWTAccessGenerate generate the jwt access token
 type JWTAccessGenerate struct {
-	SignedKey    interface{}
 	SignedMethod jwt.SigningMethod
 	UserStore    *UserStore
 }
@@ -71,13 +69,17 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 		return
 	}
 
-	if scope != "" {
-		fmt.Println("validating scope", scope, data.UserID)
-		scope, err = validateScopeForUser(ctx, scope, data.UserID)
+	standardScopes, nonstandardScopes := separateScopes(scope)
+	if len(nonstandardScopes) > 0 {
+		fmt.Println("validating nonstandard scopes", nonstandardScopes, data.UserID)
+		validatedScopes, err := validateScopeForUser(ctx, strings.Join(nonstandardScopes, " "), data.UserID)
 		if err != nil {
-			return
+			return access, refresh, err
 		}
+		nonstandardScopes = strings.Split(validatedScopes, " ")
 	}
+
+	scope = strings.Join(append(standardScopes, nonstandardScopes...), " ")
 
 	claims := &JWTAccessClaims{
 		StandardClaims: jwt.StandardClaims{
@@ -92,16 +94,23 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 	}
 
 	token := jwt.NewWithClaims(a.SignedMethod, claims)
+	signedKey, kid, err := getRSAKey()
+	if err != nil {
+		return
+	}
+
+	token.Header["kid"] = kid
+
 	var key interface{}
 	if a.isEs() {
-		key, err = jwt.ParseECPrivateKeyFromPEM(a.SignedKey.([]byte))
+		key, err = jwt.ParseECPrivateKeyFromPEM(signedKey.D.Bytes())
 		if err != nil {
 			return "", "", err
 		}
 	} else if a.isRsOrPS() {
-		key = a.SignedKey
+		key = signedKey
 	} else if a.isHs() {
-		key = a.SignedKey
+		key = signedKey
 	} else {
 		return "", "", errs.New("unsupported sign method")
 	}
@@ -130,4 +139,27 @@ func (a *JWTAccessGenerate) isRsOrPS() bool {
 
 func (a *JWTAccessGenerate) isHs() bool {
 	return strings.HasPrefix(a.SignedMethod.Alg(), "HS")
+}
+
+func containsScope(scopes, s string) bool {
+	_scopes := strings.Split(scopes, " ")
+	for _, _s := range _scopes {
+		if _s == s {
+			return true
+		}
+	}
+	return false
+}
+
+func separateScopes(scopes string) (standard, nonstandard []string) {
+	standard = []string{}
+	nonstandard = []string{}
+	for _, scope := range strings.Split(scopes, " ") {
+		if scope == "openid" || scope == "profile" || scope == "email" {
+			standard = append(standard, scope)
+		} else {
+			nonstandard = append(nonstandard, scope)
+		}
+	}
+	return
 }
