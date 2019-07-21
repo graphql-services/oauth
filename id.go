@@ -16,6 +16,20 @@ query($id: ID!) {
 	result: user(id: $id) {
 		id
 		email
+		email_verified
+		family_name
+		given_name
+		middle_name
+		nickname
+		preferred_username
+		profile
+		picture
+		website
+		gender
+		birthdate
+		zoneinfo
+		locale
+		updatedAt
 	}
 }  
 `
