@@ -60,7 +60,7 @@ func generateIDToken(ctx context.Context, ti oauth2.TokenInfo, us *UserStore) (t
 	if containsScope(scope, "profile") {
 		name := ""
 		if user.FamilyName != nil && user.GivenName != nil {
-			name = fmt.Sprintf("%s %s", user.GivenName, user.FamilyName)
+			name = fmt.Sprintf("%s %s", *user.GivenName, *user.FamilyName)
 		}
 		claims.IDTokenProfileClaims = IDTokenProfileClaims{
 			Name:              &name,
