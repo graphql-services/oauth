@@ -154,6 +154,9 @@ func containsScope(scopes, s string) bool {
 func separateScopes(scopes string) (standard, nonstandard []string) {
 	standard = []string{}
 	nonstandard = []string{}
+	if scopes == "" {
+		return
+	}
 	for _, scope := range strings.Split(scopes, " ") {
 		if scope == "openid" || scope == "profile" || scope == "email" {
 			standard = append(standard, scope)
