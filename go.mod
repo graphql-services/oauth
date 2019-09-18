@@ -10,7 +10,6 @@ require (
 	github.com/golang/protobuf v1.3.2
 	github.com/google/uuid v1.1.1
 	github.com/googleapis/gax-go v1.0.3
-	github.com/jakubknejzlik/gcloud-opentracing v0.3.0
 	github.com/jinzhu/gorm v1.9.10
 	github.com/lestrrat/go-jwx v0.0.0-20180221005942-b7d4802280ae
 	github.com/lestrrat/go-pdebug v0.0.0-20180220043741-569c97477ae8 // indirect
