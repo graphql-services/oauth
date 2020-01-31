@@ -1,7 +1,8 @@
 FROM golang as builder
-WORKDIR /go/src/github.com/graphql-services/oauth
+
+WORKDIR /app
+
 COPY . .
-RUN go get ./... 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -installsuffix cgo -o /tmp/app
 
 FROM jakubknejzlik/wait-for as wait-for

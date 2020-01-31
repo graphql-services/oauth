@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 
 	pb "github.com/graphql-services/oauth/grpc"
@@ -21,6 +22,8 @@ func getClient() (*pb.ScopeValidatorClient, error) {
 			if err != nil {
 				return nil, err
 			}
+
+			log.Printf("Created scope validator client with URL: %s", URL)
 
 			c := pb.NewScopeValidatorClient(conn)
 			client = &c
