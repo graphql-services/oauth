@@ -7,6 +7,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"time"
 
 	"github.com/dgrijalva/jwt-go"
 	"github.com/go-session/session"
@@ -72,6 +74,8 @@ func main() {
 	srv := server.NewDefaultServer(manager)
 	srv.SetAllowGetAccessRequest(true)
 	srv.SetClientInfoHandler(server.ClientFormHandler)
+
+	manager.SetPasswordTokenCfg(&manage.Config{AccessTokenExp: time.Second * time.Duration(getEnvInt("ACCESS_TOKEN_EXPIRE_IN", 7200)), RefreshTokenExp: time.Hour * 24 * 7, IsGenerateRefresh: true})
 	manager.SetRefreshTokenCfg(manage.DefaultRefreshTokenCfg)
 
 	manager.MapAccessGenerate(NewJWTAccessGenerate(jwt.SigningMethodRS256, &userStore))
@@ -214,4 +218,13 @@ func userAuthorizeHandler(w http.ResponseWriter, r *http.Request) (userID string
 	store.Delete("LoggedInUserID")
 	store.Save()
 	return
+}
+
+func getEnvInt(name string, defaultValue int) int {
+	val := os.Getenv(name)
+	v, err := strconv.Atoi(val)
+	if err != nil {
+		v = defaultValue
+	}
+	return v
 }
