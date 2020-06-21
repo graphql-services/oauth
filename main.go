@@ -104,6 +104,10 @@ func main() {
 		if err != nil {
 			return
 		}
+		if idpUser != nil {
+			userID = idpUser.ID
+			return
+		}
 		fmt.Println("??", idpUser, err)
 
 		if idpUser == nil {
