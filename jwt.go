@@ -81,6 +81,11 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 
 	scope = strings.Join(append(standardScopes, nonstandardScopes...), " ")
 
+	jwtUser := JWTUser{}
+	if user != nil {
+		jwtUser.Email = user.Email
+	}
+
 	claims := &JWTAccessClaims{
 		StandardClaims: jwt.StandardClaims{
 			Audience:  data.Client.GetID(),
@@ -88,9 +93,7 @@ func (a *JWTAccessGenerate) Token(data *oauth2.GenerateBasic, isGenRefresh bool)
 			ExpiresAt: data.TokenInfo.GetAccessCreateAt().Add(data.TokenInfo.GetAccessExpiresIn()).Unix(),
 		},
 		Scope: scope,
-		User: JWTUser{
-			Email: user.Email,
-		},
+		User:  jwtUser,
 	}
 
 	token := jwt.NewWithClaims(a.SignedMethod, claims)
