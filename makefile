@@ -1,3 +1,6 @@
+# include .env
+# export
+
 OWNER=graphql
 IMAGE_NAME=oauth
 QNAME=$(OWNER)/$(IMAGE_NAME)

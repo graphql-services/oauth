@@ -7,8 +7,10 @@ import (
 	"log"
 	"os"
 
+	jwt "github.com/dgrijalva/jwt-go/v4"
 	"github.com/machinebox/graphql"
 	opentracing "github.com/opentracing/opentracing-go"
+	"golang.org/x/oauth2"
 )
 
 const (
@@ -54,7 +56,45 @@ type IDPUserResponse struct {
 	Result IDPUser
 }
 
-func (c *IDPClient) FetchIDPUser(ctx context.Context, email, password string) (user IDPUser, err error) {
+func (c *IDPClient) FetchIDPUserFromOIDC(ctx context.Context, email, password string) (user *IDPUser, err error) {
+	oidcURL := os.Getenv("OIDC_URL")
+	if oidcURL == "" {
+		return
+	}
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FetchIDPUserFromOIDC")
+	defer span.Finish()
+
+	conf := oauth2.Config{
+		ClientID:     os.Getenv("OIDC_SECRET_ID"),
+		ClientSecret: os.Getenv("OIDC_SECRET_SECRET"),
+		Endpoint: oauth2.Endpoint{
+			TokenURL: oidcURL,
+		},
+	}
+
+	token, _ := conf.PasswordCredentialsToken(ctx, email, password)
+	fmt.Println("??", token.AccessToken, err)
+	if err != nil || token == nil {
+		return
+	}
+
+	claims := &jwt.StandardClaims{}
+	p := jwt.Parser{}
+	_, _, err = p.ParseUnverified(token.AccessToken, claims)
+	if err != nil {
+		return
+	}
+
+	user = &IDPUser{
+		ID:            claims.Subject,
+		Email:         email,
+		EmailVerified: true,
+	}
+
+	return
+}
+
+func (c *IDPClient) FetchIDPUser(ctx context.Context, email, password string) (user *IDPUser, err error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FetchIDPUser")
 	defer span.Finish()
 
@@ -65,7 +105,7 @@ func (c *IDPClient) FetchIDPUser(ctx context.Context, email, password string) (u
 	req.Var("password", password)
 	err = c.sendRequest(ctx, req, &res)
 
-	user = res.Result
+	user = &res.Result
 
 	return
 }

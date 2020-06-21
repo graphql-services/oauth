@@ -100,13 +100,27 @@ func main() {
 		span.LogFields(
 			otlog.String("username", username))
 
-		idpUser, err := idp.FetchIDPUser(ctx, username, password)
+		idpUser, err := idp.FetchIDPUserFromOIDC(ctx, username, password)
 		if err != nil {
 			return
 		}
-		user, err := userStore.GetOrCreateUserWithAccount(ctx, idpUser.ID, username, "idp")
-		if user != nil {
-			userID = user.ID
+		fmt.Println("??", idpUser, err)
+
+		if idpUser == nil {
+			idpUser, err = idp.FetchIDPUser(ctx, username, password)
+			if err != nil {
+				return
+			}
+		}
+		if idpUser != nil {
+			user, _err := userStore.GetOrCreateUserWithAccount(ctx, idpUser.ID, username, "idp")
+			if _err != nil {
+				err = _err
+				return
+			}
+			if user != nil {
+				userID = user.ID
+			}
 		}
 
 		return
