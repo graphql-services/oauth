@@ -73,7 +73,6 @@ func (c *IDPClient) FetchIDPUserFromOIDC(ctx context.Context, email, password st
 	}
 
 	token, _ := conf.PasswordCredentialsToken(ctx, email, password)
-	fmt.Println("??", token.AccessToken, err)
 	if err != nil || token == nil {
 		return
 	}
