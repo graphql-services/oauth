@@ -47,17 +47,17 @@ func generateIDToken(ctx context.Context, ti oauth2.TokenInfo, us *UserStore) (t
 
 	claims := &IDTokenClaims{
 		Audience:  ti.GetClientID(),
-		Subject:   user.ID,
+		Subject:   ti.GetUserID(),
 		ExpiresAt: ti.GetAccessCreateAt().Add(ti.GetAccessExpiresIn()).Unix(),
 	}
 
-	if containsScope(scope, "email") {
+	if containsScope(scope, "email") && user != nil {
 		claims.IDTokenEmailClaims = IDTokenEmailClaims{
 			Email:         user.Email,
 			EmailVerified: user.EmailVerified,
 		}
 	}
-	if containsScope(scope, "profile") {
+	if containsScope(scope, "profile") && user != nil {
 		name := ""
 		if user.FamilyName != nil && user.GivenName != nil {
 			name = fmt.Sprintf("%s %s", *user.GivenName, *user.FamilyName)
